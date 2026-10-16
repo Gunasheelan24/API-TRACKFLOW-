@@ -16,6 +16,7 @@ import { MailService } from 'src/mail/mail.service';
 import { type sentEmailtype } from './dto/verifyEmailAddress';
 import { randomInt } from 'node:crypto';
 import {
+  BadRequestException,
   ConflictException,
   HttpException,
   HttpStatus,
@@ -31,6 +32,7 @@ import {
   type CreateAccountResponse,
 } from './types/auth.types';
 import { UserOtp } from './entities/otp.entity';
+import { ResetPasswordDto } from './dto/reset-password';
 
 @Injectable()
 export class AuthService {
@@ -274,6 +276,67 @@ export class AuthService {
         'Something went wrong',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
+    } catch (error) {
+      if (error instanceof Error) {
+        this.logger.error(
+          `${error?.message ?? 'Something Went Wrong'} In ${endPoint}`,
+          error?.stack ?? '',
+        );
+      }
+
+      throw error;
+    }
+  }
+
+  async resetPassword(body: ResetPasswordDto) {
+    const endPoint = 'resetPassword';
+    try {
+      const { email, otp, password } = body;
+
+      // fetch user and user otp
+      const fetchOtp = await this.userRepository
+        .createQueryBuilder('user')
+        .leftJoinAndSelect('user.userOtps', 'userOtp')
+        .addSelect('user.password')
+        .where('user.email = :email', { email })
+        .orderBy('userOtp.created_at', 'DESC')
+        .limit(1)
+        .getOne();
+
+      // handling the error for invalid user or otp not exist
+      if (!fetchOtp) return new UnauthorizedException("user does't exist");
+      if (!fetchOtp?.userOtps?.length)
+        return new UnauthorizedException('OTP not found or expired');
+
+      // User OTP array
+      const userOtp = fetchOtp?.userOtps?.[0];
+      if (userOtp?.isUsed) return new UnauthorizedException('OTP Is Expired');
+
+      // Check The Validity of the latest OTP
+      const currentTime = dayjs().toDate();
+      const expiresTime = userOtp?.expiryAt;
+      if (currentTime > expiresTime)
+        throw new BadRequestException('OTP expired');
+
+      // Compare OTP
+      const compareOtp = await this.validatePassword(otp, userOtp?.otp);
+      if (!compareOtp) return new UnauthorizedException('OTP Is Incorrect');
+
+      // Hash New Password
+      const hashedPassword = await this.hashPassword(password);
+
+      // Store new password in the user table and softdelete the otp
+      fetchOtp.password = hashedPassword;
+      await this.userRepository.save(fetchOtp);
+      await this.userOtpRepository.update(
+        {
+          id: userOtp.id,
+        },
+        { isUsed: true },
+      );
+
+      // return the response
+      return apiResponse('Password Reset Successfully', HttpStatus.CREATED, {});
     } catch (error) {
       if (error instanceof Error) {
         this.logger.error(

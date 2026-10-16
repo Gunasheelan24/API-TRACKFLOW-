@@ -45,6 +45,14 @@ export class UserOtp {
   })
   user!: User;
 
+  @Column({
+    name: 'is_used',
+    type: 'boolean',
+    default: false,
+    comment: 'True if the OTP has already been used',
+  })
+  isUsed!: boolean;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
   createdAt!: Date;
 

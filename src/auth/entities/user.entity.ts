@@ -5,7 +5,9 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
+import { UserOtp } from './otp.entity';
 
 @Entity('users')
 export class User {
@@ -30,6 +32,9 @@ export class User {
     select: false,
   })
   password!: string;
+
+  @OneToMany(() => UserOtp, (otp) => otp.user)
+  userOtps!: UserOtp[];
 
   @DeleteDateColumn({
     type: 'timestamp',

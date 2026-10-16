@@ -5,6 +5,7 @@ import { LoginDto } from './dto/login-user.dto';
 import type { Request, Response } from 'express';
 import { sentEmailOtp } from './dto/verifyEmailAddress';
 import type { RefreshRequest } from './types/auth.types';
+import { ResetPasswordDto } from './dto/reset-password';
 
 @Controller('auth')
 export class AuthController {
@@ -30,5 +31,10 @@ export class AuthController {
   @Post('sent-otp')
   sentEmailOtp(@Body() verifyEmailDto: sentEmailOtp) {
     return this.authService.sentEmailOtp(verifyEmailDto);
+  }
+
+  @Post('reset-password')
+  resetPassword(@Body() body: ResetPasswordDto) {
+    return this.authService.resetPassword(body);
   }
 }

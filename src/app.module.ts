@@ -24,6 +24,7 @@ import { MailService } from './mail/mail.service';
           password: configService.getOrThrow<string>('SQL_PASSWORD'),
           database: configService.getOrThrow<string>('SQL_DB'),
           autoLoadEntities: true,
+          logging: ['schema', 'error', 'log'],
         };
       },
     }),
