@@ -51,7 +51,7 @@ export class TasksService {
       const task = this.taskRepository.create({
         title: createTaskDto.title,
         description: createTaskDto.description,
-        taskStatus: TaskStatus.PENDING,
+        taskStatus: TaskStatus.Pending,
         userId: user.id,
       });
 
@@ -140,7 +140,7 @@ export class TasksService {
           throw new NotFoundException('Task not found');
         }
 
-        if (task.taskStatus === TaskStatus.COMPLETED) {
+        if (task.taskStatus === TaskStatus.Completed) {
           throw new ConflictException(
             'You cannot start a timer for a completed task',
           );
@@ -172,7 +172,7 @@ export class TasksService {
         const savedTimeLog = await timeLogRepository.save(timeLog);
 
         // Here i'm updating the task to inprogress
-        task.taskStatus = TaskStatus.IN_PROGRESS;
+        task.taskStatus = TaskStatus.InProgress;
         await taskRepository.save(task);
 
         return {

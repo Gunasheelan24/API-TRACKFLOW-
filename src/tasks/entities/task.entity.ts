@@ -26,7 +26,7 @@ export class Tasks {
     name: 'task_status',
     type: 'enum',
     enum: TaskStatus,
-    default: TaskStatus.PENDING,
+    default: TaskStatus.Pending,
   })
   taskStatus!: TaskStatus;
 

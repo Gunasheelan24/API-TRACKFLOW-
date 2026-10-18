@@ -115,6 +115,7 @@ export class AuthService {
     to: string;
     subject: string;
     otp: string;
+    email: string;
   }): Promise<boolean> {
     const transport = this.mailTransport();
     const sendEmailResponse = await transport.sendMail({
@@ -124,7 +125,7 @@ export class AuthService {
       },
       to: user.to,
       subject: user.subject,
-      html: this.mailService.verificationEmailContent(user.otp),
+      html: this.mailService.verificationEmailContent(user?.otp, user?.email),
     });
     return sendEmailResponse?.accepted?.length > 0;
   }
@@ -249,6 +250,7 @@ export class AuthService {
         otp: otp,
         to: email,
         subject: 'Welcome To TrackFlow',
+        email: isExistingUser.email,
       });
 
       // If The Email Send Success else throw error
