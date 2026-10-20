@@ -12,12 +12,12 @@ import { ConfigService } from '@nestjs/config';
 import { CreateTaskDto } from './dto/CreateTaskDto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/auth/entities/user.entity';
-import { FindOptionsWhere, IsNull, Repository, DataSource } from 'typeorm';
 import { Tasks } from './entities/task.entity';
-import { TaskStatus } from './types/Task.type';
 import { apiResponse } from 'src/common/utils/api-response';
 import { GetTasksQueryDto } from './dto/getTaskDto';
 import { TimeLog } from './entities/time-log.entity';
+import { TaskStatus, WhereType } from './types/Task.type';
+import { FindOptionsWhere, IsNull, Repository, DataSource } from 'typeorm';
 
 @Injectable()
 export class TasksService {
@@ -76,33 +76,34 @@ export class TasksService {
     try {
       const { status, page, limit } = query;
 
-      const where: FindOptionsWhere<Tasks> = {
+      const whereValue: WhereType = {
         userId,
         deletedAt: IsNull(),
       };
 
-      if (status !== undefined) {
-        where.taskStatus = status;
+      if (status) {
+        whereValue['taskStatus'] = status;
       }
 
-      const [tasks, total] = await this.taskRepository.findAndCount({
-        where,
+      // get All the task
+      const [getTasks, count] = await this.taskRepository.findAndCount({
+        where: whereValue,
         order: {
           createdAt: 'DESC',
-          id: 'DESC',
         },
-        skip: (page - 1) * limit,
         take: limit,
+        skip: Number(query.page) * 10,
       });
+      console.log(getTasks);
 
       return apiResponse('Tasks fetched successfully', HttpStatus.OK, {
-        tasks,
+        tasks: getTasks,
         pagination: {
           page,
           limit,
-          total,
-          totalPages: Math.ceil(total / limit),
-          hasNextPage: page * limit < total,
+          count,
+          totalPages: Math.ceil(count / limit),
+          hasNextPage: page * limit < count,
         },
       });
     } catch (error) {

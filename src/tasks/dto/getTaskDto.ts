@@ -9,8 +9,8 @@ export class GetTasksQueryDto {
 
   @Type(() => Number)
   @IsInt()
-  @Min(1)
-  page: number = 1;
+  @Min(0)
+  page: number = 0;
 
   @Type(() => Number)
   @IsInt()
